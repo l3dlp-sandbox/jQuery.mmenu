@@ -1,1 +1,50 @@
-!function(d){var s="mmenu";d[s].addons.navbars.breadcrumbs=function(a,r,i){var n=this,b=d[s]._c,c=d[s]._d;b.add("separator");var e=d('<span class="'+b.navbar+'__breadcrumbs" />').appendTo(a);this.bind("initNavbar:after",function(a){if(!a.children("."+b.navbar).children("."+b.navbar+"__breadcrumbs").length){a.removeClass(b.panel+"_has-navbar");for(var r=[],n=d('<span class="'+b.navbar+'__breadcrumbs"></span>'),e=a,s=!0;e&&e.length;){if(e.is("."+b.panel)||(e=e.closest("."+b.panel)),!e.parent("."+b.listitem+"_vertical").length){var t=e.children("."+b.navbar).children("."+b.navbar+"__title").text();t.length&&r.unshift(s?"<span>"+t+"</span>":'<a href="#'+e.attr("id")+'">'+t+"</a>"),s=!1}e=e.data(c.parent)}i.breadcrumbs.removeFirst&&r.shift(),n.append(r.join('<span class="'+b.separator+'">'+i.breadcrumbs.separator+"</span>")).appendTo(a.children("."+b.navbar))}}),this.bind("openPanel:start",function(a){var r=a.find("."+b.navbar+"__breadcrumbs");r.length&&e.html(r.html()||"")}),this.bind("initNavbar:after:sr-aria",function(a){a.children("."+b.navbar).children("."+b.breadcrumbs).children("a").each(function(){n.__sr_aria(d(this),"owns",d(this).attr("href").slice(1))})})}}(jQuery);
+import Mmenu from '../../core/oncanvas/mmenu.oncanvas';
+import * as DOM from '../../core/_dom';
+export default function (navbar) {
+    //	Add content
+    var breadcrumbs = DOM.create('span.mm-navbar__breadcrumbs');
+    navbar.append(breadcrumbs);
+    this.bind('initNavbar:after', (panel) => {
+        if (panel.querySelector('.mm-navbar__breadcrumbs')) {
+            return;
+        }
+        DOM.children(panel, '.mm-navbar')[0].classList.add('mm-hidden');
+        var crumbs = [], breadcrumbs = DOM.create('span.mm-navbar__breadcrumbs'), current = panel, first = true;
+        while (current) {
+            if (!current.matches('.mm-panel')) {
+                current = current.closest('.mm-panel');
+            }
+            if (!current.parentElement.matches('.mm-listitem_vertical')) {
+                var text = DOM.find(current, '.mm-navbar__title')[0]
+                    .textContent;
+                if (text.length) {
+                    crumbs.unshift(first
+                        ? '<span>' + text + '</span>'
+                        : '<a href="#' + current.id + '">' + text + '</a>');
+                }
+                first = false;
+            }
+            current = current['mmParent'];
+        }
+        if (this.conf.navbars.breadcrumbs.removeFirst) {
+            crumbs.shift();
+        }
+        breadcrumbs.innerHTML = crumbs.join('<span class="mm-separator">' +
+            this.conf.navbars.breadcrumbs.separator +
+            '</span>');
+        DOM.children(panel, '.mm-navbar')[0].append(breadcrumbs);
+    });
+    //	Update for to opened panel
+    this.bind('openPanel:start', (panel) => {
+        var crumbs = panel.querySelector('.mm-navbar__breadcrumbs');
+        if (crumbs) {
+            breadcrumbs.innerHTML = crumbs.innerHTML;
+        }
+    });
+    //	Add screenreader / aria support
+    this.bind('initNavbar:after:sr-aria', (panel) => {
+        DOM.find(panel, '.mm-breadcrumbs a').forEach(anchor => {
+            Mmenu.sr_aria(anchor, 'owns', anchor.getAttribute('href').slice(1));
+        });
+    });
+}
